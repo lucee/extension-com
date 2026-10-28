@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.jacob</groupId>
+  <artifactId>jacob</artifactId>
+  <version>1.21</version>
+  <packaging>jar</packaging>
+  <name>JACOB</name>
+  <description>JACOB: Java COM Bridge 1.21, the official release of https://github.com/freemansoft/jacob-project (not on Maven Central), the native libraries jacob-1.21-x64.dll and jacob-1.21-x86.dll of the same release are in the resources of this extension</description>
+  <url>https://github.com/freemansoft/jacob-project</url>
+  <licenses>
+    <license>
+      <name>GNU Lesser General Public License, Version 2.1</name>
+      <url>https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt</url>
+    </license>
+  </licenses>
+</project>

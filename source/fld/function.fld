@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE func-lib PUBLIC "-//Railo//DTD CFML Function Library 1.0//EN"
+	"dtd/web-cfmfunctionlibrary_1_0.dtd">
+<func-lib>
+	<flib-version>1.00</flib-version>
+	<short-name>COM</short-name>
+	<uri>http://extension.lucee.org/function/com</uri>
+	<display-name>COM</display-name>
+	<description>
+		Functions to work with COM/ActiveX objects (Windows only)
+	</description>
+
+	<!-- CreateComObject -->
+	<function>
+		<name>CreateComObject</name>
+		<class maven="{maven}">org.lucee.extension.com.functions.CreateComObject</class>
+		<keywords>com,activex,windows</keywords>
+		<description>Creates a COM/ActiveX object (Windows only), replaces createObject("com", className) and cfobject type="com" of Lucee 8 and older.</description>
+		<introduced>9.0.0.0</introduced>
+		<argument>
+			<name>className</name>
+			<alias>class</alias>
+			<type>string</type>
+			<required>Yes</required>
+			<description>Name (ProgID) of the COM object, for example Scripting.FileSystemObject</description>
+		</argument>
+		<return>
+			<type>any</type>
+		</return>
+	</function>
+
+	<!-- ReleaseComObject -->
+	<function>
+		<name>ReleaseComObject</name>
+		<class maven="{maven}">org.lucee.extension.com.functions.ReleaseComObject</class>
+		<keywords>com,activex,windows</keywords>
+		<description>Releases a COM Object and frees up resources that it used.</description>
+		<introduced>5.0.0.0</introduced>
+		<argument>
+			<name>comObject</name>
+			<alias>com</alias>
+			<type>any</type>
+			<required>Yes</required>
+			<description>Variable name of a COM object that was created using the function createComObject.</description>
+		</argument>
+		<return>
+			<type>void</type>
+		</return>
+	</function>
+</func-lib>
