@@ -36,6 +36,13 @@ final class DllSetup {
 	 */
 	static final String PROP_AUTOGC = "com.jacob.autogc";
 
+	/**
+	 * optional: full path of a native library of Jacob 1.21 to use instead of the bundled one
+	 */
+	static final String PROP_DLL_PATH = "lucee.extension.com.dll.path";
+
+	private static final String[] INITIALIZE = { "com.jacob.com.JacobObject", "com.jacob.com.ComThread", "com.jacob.com.ROT", "com.jacob.com.STA" };
+
 	private static volatile boolean done;
 
 	static void setup(PageContext pc) throws PageException {
@@ -54,8 +61,11 @@ final class DllSetup {
 
 			if (System.getProperty(PROP_AUTOGC) == null) System.setProperty(PROP_AUTOGC, "true");
 
-			// an explicitly configured library is used as it is
-			if (!isEmpty(System.getProperty(LibraryLoader.JACOB_DLL_PATH))) {
+			// an explicitly configured library (own property, the properties of Jacob are shared with the COM support of the core of
+			// Lucee 7 and 8, which has its own, different native library)
+			String configured = System.getProperty(PROP_DLL_PATH);
+			if (!isEmpty(configured)) {
+				loadLibrary(eng, new File(configured.trim()), new File(configured.trim()).getName());
 				done = true;
 				return;
 			}
@@ -81,8 +91,7 @@ final class DllSetup {
 						if (!dll.isFile()) throw e;
 					}
 				}
-				System.setProperty(LibraryLoader.JACOB_DLL_PATH, dll.getAbsolutePath());
-				if (isEmpty(System.getProperty(LibraryLoader.JACOB_DLL_NAME))) System.setProperty(LibraryLoader.JACOB_DLL_NAME, name);
+				loadLibrary(eng, dll, name);
 			}
 			catch (IOException e) {
 				throw eng.getExceptionUtil().createApplicationException("Failed to deploy the native library [" + name + "] of Jacob to [" + dll + "]: " + e.getMessage()
@@ -93,6 +102,41 @@ final class DllSetup {
 			}
 			done = true;
 		}
+	}
+
+	/**
+	 * Jacob finds its native library with the system properties jacob.dll.path and jacob.dll.name. They are global, and the COM support
+	 * of the core of Lucee 7 and 8 uses the same properties for a different library, so they are only set while the library is loaded
+	 * and then set back.
+	 */
+	private static void loadLibrary(CFMLEngine eng, File dll, String name) throws PageException {
+		String oldPath = System.getProperty(LibraryLoader.JACOB_DLL_PATH);
+		String oldName = System.getProperty(LibraryLoader.JACOB_DLL_NAME);
+		try {
+			System.setProperty(LibraryLoader.JACOB_DLL_PATH, dll.getAbsolutePath());
+			System.setProperty(LibraryLoader.JACOB_DLL_NAME, name);
+			LibraryLoader.loadJacobLibrary();
+			// these classes load the library again in their static initializers, initialize them while the properties are set
+			for (String className: INITIALIZE) {
+				Class.forName(className, true, DllSetup.class.getClassLoader());
+			}
+		}
+		catch (ClassNotFoundException e) {
+			throw eng.getExceptionUtil().createApplicationException("Jacob class not found: " + e.getMessage());
+		}
+		catch (UnsatisfiedLinkError | ExceptionInInitializerError e) {
+			throw eng.getExceptionUtil().createApplicationException("Failed to load the native library [" + dll + "] of Jacob: " + e.getMessage(),
+					"A native library can only be loaded once per JVM and classloader, restart the server if the extension was updated or reloaded.");
+		}
+		finally {
+			restore(LibraryLoader.JACOB_DLL_PATH, oldPath);
+			restore(LibraryLoader.JACOB_DLL_NAME, oldName);
+		}
+	}
+
+	private static void restore(String key, String value) {
+		if (value == null) System.clearProperty(key);
+		else System.setProperty(key, value);
 	}
 
 	private static byte[] readBundled(String name) throws IOException {

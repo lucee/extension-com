@@ -37,7 +37,7 @@ Jacob keeps a table of all the objects created by a thread until the thread ends
 
 ## Native library
 
-The extension copies `jacob-1.21-x64.dll` (or `-x86`) to `lucee-server/bin` on first use, and replaces the file when it differs from the bundled one. If you set the system property `jacob.dll.path` (and `jacob.dll.name`) yourself, that library is used as it is (see LGPL below, you can replace the library).
+The extension copies `jacob-1.21-x64.dll` (or `-x86`) to `lucee-server/bin` on first use, and replaces the file when it differs from the bundled one. If you set the system property `lucee.extension.com.dll.path` to the full path of a native library of Jacob 1.21, that library is used instead (see LGPL below, you can replace the library). The properties of Jacob itself (`jacob.dll.path`) are not used, because the COM support in the core of Lucee 7 and 8 uses the same ones for a different library; the extension only sets them while it loads its library and sets them back.
 
 A JNI library can be loaded only once per JVM and classloader: if the extension is updated or reloaded without a restart of the server, the new version cannot load the library, `createComObject` throws an exception that tells you so, restart the server. Windows on ARM is not supported by Jacob 1.21 (only x86 and x64).
 
@@ -51,7 +51,7 @@ A JNI library can be loaded only once per JVM and classloader: if the extension 
 | `jacob-1.21-x64.dll` | `fbb3d16d2c3ee947fa3f9fb53e98b2fb4f0f4517abebc7005dfd082e928659af` |
 | `jacob-1.21-x86.dll` | `ca5ebd5e58d9d6bd8489d5ccf3b4f25ff2b11b2fc9eaa31ad47a8a43bfa913d5` |
 
-LGPL: the Jacob library is a separate jar (`maven/io/github/osobolev/jacob/` in the extension) and a separate native library, both can be replaced by your own build of Jacob (same API), put your jar in the `mvn` folder of the server and set `jacob.dll.path`.
+LGPL: the Jacob library is a separate jar (`maven/io/github/osobolev/jacob/` in the extension) and a separate native library, both can be replaced by your own build of Jacob (same API), put your jar in the `mvn` folder of the server and set `lucee.extension.com.dll.path`.
 
 ## Build
 
