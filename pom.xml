@@ -29,7 +29,7 @@
         <mvnGroupPath>org/lucee</mvnGroupPath>
         <mvnArtifactId>com</mvnArtifactId>
         <filename>com-extension</filename>
-        <luceeCoreVersion>7.0.0.395</luceeCoreVersion>
+        <luceeCoreVersion>7.0.5.41</luceeCoreVersion>
         <releaseType>server</releaseType>
         <label>COM Extension</label>
         <release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</release.url>

@@ -57,7 +57,9 @@ jobs:
           TEST_VERSIONS: ${{ vars.LUCEE_TEST_VERSIONS_7 }}
           # this extension works with Lucee 7.0.0.395 or newer (luceeCoreVersion in pom.xml), 9.0 is where the core has no COM anymore
           FALLBACK_LINES: "7.0 7.1 8.0"
-          REQUIRED_LINES: "9.0"
+          # 9.0 is where the core has no COM anymore, add it here ("9.0") as soon as the update provider serves 9.0 builds
+          # (update.lucee.org/rest/update/provider/latest/9.0/all/light answers 404 for now)
+          REQUIRED_LINES: ""
         run: |
           set -euo pipefail
           if [[ -n "${TEST_VERSIONS// }" ]] && echo "$TEST_VERSIONS" | jq -e 'type == "array" and length > 0' > /dev/null; then
@@ -254,6 +256,12 @@ jobs:
           path: ~/work/_actions/lucee/script-runner/main/lucee-download-cache
           key: lucee-downloads
 
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
       - name: Download extension artifact
         uses: actions/download-artifact@v8
         with:
@@ -290,6 +298,12 @@ jobs:
         lucee: ${{ fromJSON(needs.setup.outputs.lucee_matrix) }}
     steps:
       - uses: actions/checkout@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
       - name: Download extension artifact
         uses: actions/download-artifact@v8

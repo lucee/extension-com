@@ -27,7 +27,7 @@ See [LDEV-6763](https://luceeserver.atlassian.net/browse/LDEV-6763).
 
 ## Which Lucee versions
 
-The extension works with Lucee 7.0 and newer (`luceeCoreVersion` 7.0.0.395, the loader API is all it needs), so code can be migrated to `createComObject()` before the upgrade to Lucee 9. Lucee 7.x and 8.0 still have COM in the core, there the extension is redundant. From Lucee 9.0 on it is the only way to use COM.
+The extension works with Lucee 7.0.5.41 and newer (`luceeCoreVersion`, the loader API is all it needs; the first 7.0 builds could not load the extension class reliably in CI), so code can be migrated to `createComObject()` before the upgrade to Lucee 9. Lucee 7.x and 8.0 still have COM in the core, there the extension is redundant. From Lucee 9.0 on it is the only way to use COM.
 
 ## Threads and objects
 
