@@ -1,4 +1,4 @@
-component extends="org.lucee.cfml.test.LuceeTestCase" labels="com" {
+component extends="org.lucee.cfml.test.LuceeTestCase" labels="comextension" {
 
 	function run( testResults, testBox ) {
 
