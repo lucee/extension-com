@@ -285,6 +285,9 @@ jobs:
           extensionDir: ${{ github.workspace }}/target
         env:
           testLabels: com
+          # only the tests of this extension, not the COM tests of the Lucee test suite (LDEV3314 tests the COM support of the core of
+          # Lucee 7 and 8, which has nothing to do with the extension and fails on Windows with Lucee 8.0.0.186-RC)
+          testFilter: createComObject
           testAdditional: ${{ github.workspace }}/tests
 
   # the COM code can only be tested on Windows
@@ -328,6 +331,9 @@ jobs:
           extensionDir: ${{ github.workspace }}/target
         env:
           testLabels: com
+          # only the tests of this extension, not the COM tests of the Lucee test suite (LDEV3314 tests the COM support of the core of
+          # Lucee 7 and 8, which has nothing to do with the extension and fails on Windows with Lucee 8.0.0.186-RC)
+          testFilter: createComObject
           testAdditional: ${{ github.workspace }}/tests
 
   deploy:
