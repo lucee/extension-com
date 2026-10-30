@@ -113,7 +113,7 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="comextension" {
 				}
 			});
 
-			it( "Scripting.FileSystemObject: loop over the files of a folder", function() {
+			it( "Scripting.FileSystemObject: the files of a folder", function() {
 				var fso = createComObject( "Scripting.FileSystemObject" );
 				var dir = getTempDirectory() & "com-extension-" & createUUID() & "/";
 				directoryCreate( dir );
@@ -123,10 +123,9 @@ component extends="org.lucee.cfml.test.LuceeTestCase" labels="comextension" {
 					var folder = fso.GetFolder( dir );
 					var files = folder.Files;
 					expect( files.Count ).toBe( 2 );
-					var names = [];
-					for ( var f in files ) arrayAppend( names, f.Name );
-					arraySort( names, "text" );
-					expect( names ).toBe( [ "a.txt", "b.txt" ] );
+					// the elements of a collection of COM objects are COM objects, they are not keys, so no loop over the collection here
+					expect( files.Item( "a.txt" ).Name ).toBe( "a.txt" );
+					expect( files.Item( "b.txt" ).Name ).toBe( "b.txt" );
 					releaseComObject( files );
 					releaseComObject( folder );
 				}

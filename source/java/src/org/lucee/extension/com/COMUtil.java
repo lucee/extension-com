@@ -1,5 +1,7 @@
 package org.lucee.extension.com;
 
+import com.jacob.com.Dispatch;
+import com.jacob.com.SafeArray;
 import com.jacob.com.Variant;
 
 import lucee.loader.engine.CFMLEngine;
@@ -58,7 +60,40 @@ public final class COMUtil {
 			return new COMObject(variant, variant.toDispatch(), parent.getName() + "." + key);
 		}
 
-		throw eng.getExceptionUtil().createExpressionException("COM Type [" + toStringType(type) + "] not supported");
+		// everything else: values by reference (VT_BYREF | x) and arrays (VT_ARRAY | x) are combinations of the types above,
+		// Jacob knows how to convert them
+		try {
+			return convert(parent, variant.toJavaObject(), key);
+		}
+		catch (RuntimeException e) {
+			throw eng.getExceptionUtil().createExpressionException("COM Type [" + toStringType(type) + " (vt=" + type + ")] not supported: " + e.getMessage());
+		}
+	}
+
+	private static Object convert(COMObject parent, Object obj, String key) throws PageException {
+		if (obj == null) return null;
+		if (obj instanceof Variant) return toObject(parent, (Variant) obj, key);
+		if (obj instanceof Dispatch) return new COMObject(null, (Dispatch) obj, parent.getName() + "." + key);
+		if (obj instanceof SafeArray) return convertArray(parent, ((SafeArray) obj).toVariantArray());
+		if (obj instanceof Object[]) {
+			Object[] src = (Object[]) obj;
+			Array arr = eng.getCreationUtil().createArray();
+			for (int i = 0; i < src.length; i++) {
+				arr.appendEL(convert(parent, src[i], String.valueOf(i)));
+			}
+			return arr;
+		}
+		if (obj instanceof java.util.Date) return eng.getCreationUtil().createDateTime(((java.util.Date) obj).getTime());
+		if (obj instanceof com.jacob.com.Currency) return java.math.BigDecimal.valueOf(((com.jacob.com.Currency) obj).longValue(), 4);
+		return obj;
+	}
+
+	private static Array convertArray(COMObject parent, Variant[] varr) throws PageException {
+		Array arr = eng.getCreationUtil().createArray();
+		for (int i = 0; i < varr.length; i++) {
+			arr.appendEL(toObject(parent, varr[i], String.valueOf(i)));
+		}
+		return arr;
 	}
 
 	/**
