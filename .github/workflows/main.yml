@@ -332,7 +332,8 @@ jobs:
           # only the tests of this extension (label comextension), not the COM tests of the Lucee test suite (label com, for example
           # LDEV3314 tests the COM support of the core of Lucee 7 and 8, which has nothing to do with the extension)
           testLabels: comextension
-          testAdditional: ${{ github.workspace }}/tests
+          # a Windows path with backslashes only, with a mixed path (D:\a\...\extension-com/tests) the runner finds no tests
+          testAdditional: ${{ github.workspace }}\tests
 
   deploy:
     runs-on: ubuntu-latest
