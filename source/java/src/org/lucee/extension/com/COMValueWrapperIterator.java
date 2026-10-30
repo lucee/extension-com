@@ -1,34 +1,18 @@
 package org.lucee.extension.com;
 
-import java.util.Iterator;
-
-import com.jacob.com.EnumVariant;
+import com.jacob.com.Variant;
 
 /**
  * iterates over the elements of a COM collection
  */
-public final class COMValueWrapperIterator implements Iterator<Object> {
-
-	private final EnumVariant enumVariant;
-	private final COMObject wrapper;
+public final class COMValueWrapperIterator extends COMEnumIterator<Object> {
 
 	public COMValueWrapperIterator(COMObject wrapper) {
-		this.enumVariant = new EnumVariant(wrapper.getDispatch());
-		this.wrapper = wrapper;
+		super(wrapper);
 	}
 
 	@Override
-	public void remove() {
-		enumVariant.safeRelease();
-	}
-
-	@Override
-	public boolean hasNext() {
-		return enumVariant.hasMoreElements();
-	}
-
-	@Override
-	public Object next() {
-		return COMUtil.toObject(wrapper, enumVariant.Next(), "", null);
+	protected Object convert(Variant variant) {
+		return COMUtil.toObject(wrapper, variant, "", null);
 	}
 }

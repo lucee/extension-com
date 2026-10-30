@@ -32,9 +32,14 @@ public final class COMUtil {
 		else if (type == Variant.VariantInt) return Integer.valueOf(variant.getInt());
 		else if (type == Variant.VariantFloat) return Float.valueOf(variant.getFloat());
 		else if (type == Variant.VariantDouble) return Double.valueOf(variant.getDouble());
-		else if (type == Variant.VariantCurrency) return Long.valueOf(variant.getCurrency().longValue());
+		// the raw COM value is the amount multiplied by 10000
+		else if (type == Variant.VariantCurrency) return java.math.BigDecimal.valueOf(variant.getCurrency().longValue(), 4);
 		else if (type == Variant.VariantObject) return variant.toEnumVariant();
-		else if (type == Variant.VariantDate) return eng.getCreationUtil().createDateTime((long) variant.getDate());
+		// getDate() is the raw OLE date (days since 1899-12-30), getJavaDate() the converted one
+		else if (type == Variant.VariantDate) {
+			java.util.Date date = variant.getJavaDate();
+			return date == null ? null : eng.getCreationUtil().createDateTime(date.getTime());
+		}
 		else if (type == Variant.VariantString) return variant.getString();
 		else if (type == Variant.VariantBoolean) return variant.getBoolean() ? Boolean.TRUE : Boolean.FALSE;
 		else if (type == Variant.VariantByte) return Byte.valueOf(variant.getByte());

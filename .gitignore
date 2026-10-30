@@ -14,3 +14,4 @@ temp
 /test-output
 /.claude
 .vscode/settings.json
+.flattened-pom.xml

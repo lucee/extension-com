@@ -4,11 +4,20 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.lucee</groupId>
     <artifactId>com-extension</artifactId>
-    <version>1.0.0.1-ALPHA</version>
+    <version>${revision}</version>
     <packaging>pom</packaging>
     <name>COM Extension</name>
 
     <properties>
+        <!-- CI-friendly version (same approach as Lucee core LDEV-6516 and the other extensions).
+             Local and PR builds use the default below (base.build + qualifier).
+             Every push to main gets -Drevision=base.N[qualifier] from GitHub Actions, N = highest existing build + 1,
+             and publishes it (-SNAPSHOT to the Central snapshot repository). A manual run can publish an ALPHA, BETA, RC or final release. -->
+        <extension.version.base>1.0.0</extension.version.base>
+        <extension.version.build>0</extension.version.build>
+        <extension.version.qualifier>-SNAPSHOT</extension.version.qualifier>
+        <revision>${extension.version.base}.${extension.version.build}${extension.version.qualifier}</revision>
+        <goal>install</goal>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -108,6 +117,32 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <flattenMode>bom</flattenMode>
+                    <!-- resolve ${revision} in the installed/deployed pom (packaging pom is skipped by default) -->
+                    <updatePomFile>true</updatePomFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>

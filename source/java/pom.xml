@@ -4,6 +4,10 @@
   <artifactId>com</artifactId>
   <version>${revision}</version>
 
+  <properties>
+    <jacob.version>1.21</jacob.version>
+  </properties>
+
   <name>COM</name>
   <description>Windows COM/ActiveX support for Lucee (createComObject), based on Jacob</description>
   <url>http://maven.lucee.org/com</url>
@@ -33,6 +37,43 @@
   <build>
     <sourceDirectory>src</sourceDirectory>
     <plugins>
+
+      <!-- the native libraries of exactly the Jacob version of the dependency, published next to the jar on Maven Central -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <id>copy-jacob-dlls</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}/resources/jacob</outputDirectory>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>io.github.osobolev</groupId>
+                  <artifactId>jacob</artifactId>
+                  <version>${jacob.version}</version>
+                  <type>dll</type>
+                  <classifier>x64</classifier>
+                  <destFileName>jacob-${jacob.version}-x64.dll</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>io.github.osobolev</groupId>
+                  <artifactId>jacob</artifactId>
+                  <version>${jacob.version}</version>
+                  <type>dll</type>
+                  <classifier>x86</classifier>
+                  <destFileName>jacob-${jacob.version}-x86.dll</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -172,11 +213,10 @@
   </build>
 
   <dependencies>
-    <!-- the official Jacob release is not on Maven Central, it is installed from source/java/lib by the build (build.xml, target install-jacob) -->
     <dependency>
-      <groupId>com.jacob</groupId>
+      <groupId>io.github.osobolev</groupId>
       <artifactId>jacob</artifactId>
-      <version>1.21</version>
+      <version>${jacob.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

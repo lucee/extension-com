@@ -1,11 +1,13 @@
 package org.lucee.extension.com;
 
+import java.lang.reflect.Constructor;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.jacob.com.ComException;
 import com.jacob.com.Dispatch;
 import com.jacob.com.Variant;
 
@@ -45,7 +47,18 @@ public final class COMObject implements Objects, Iteratorable {
 	public COMObject(PageContext pc, String name) throws PageException {
 		DllSetup.setup(pc);
 		this.name = name;
-		this.dispatch = new Dispatch(name);
+		try {
+			this.dispatch = new Dispatch(name);
+		}
+		catch (ComException e) {
+			throw eng.getExceptionUtil().createApplicationException("Failed to create the COM object [" + name + "]: " + e.getMessage(),
+					"Make sure the COM class (ProgID) is registered on this machine and that the bitness (x86/x64) of the component matches the JVM.");
+		}
+		catch (UnsatisfiedLinkError | NoClassDefFoundError | ExceptionInInitializerError e) {
+			// a JNI library can only be loaded by one classloader per JVM, after an update of the extension without a restart it fails
+			throw eng.getExceptionUtil().createApplicationException("Failed to load the native library of Jacob: " + e.getMessage(),
+					"A native library can only be loaded once per JVM and classloader, restart the server if the extension was updated or reloaded.");
+		}
 	}
 
 	/**
@@ -59,23 +72,43 @@ public final class COMObject implements Objects, Iteratorable {
 
 	@Override
 	public Object get(PageContext pc, Collection.Key key) throws PageException {
-		return COMUtil.toObject(this, Dispatch.call(dispatch, key.getString()), key.getString());
+		try {
+			return COMUtil.toObject(this, Dispatch.call(dispatch, key.getString()), key.getString());
+		}
+		catch (ComException e) {
+			throw toPageException("read the property", key, e);
+		}
 	}
 
 	@Override
 	public Object get(PageContext pc, Collection.Key key, Object defaultValue) {
-		return COMUtil.toObject(this, Dispatch.call(dispatch, key.getString()), key.getString(), defaultValue);
+		try {
+			return COMUtil.toObject(this, Dispatch.call(dispatch, key.getString()), key.getString(), defaultValue);
+		}
+		catch (ComException e) {
+			return defaultValue;
+		}
 	}
 
 	@Override
 	public Object set(PageContext pc, Collection.Key propertyName, Object value) throws PageException {
-		Dispatch.put(dispatch, propertyName.getString(), unwrap(value));
+		try {
+			Dispatch.put(dispatch, propertyName.getString(), unwrap(value));
+		}
+		catch (ComException e) {
+			throw toPageException("set the property", propertyName, e);
+		}
 		return value;
 	}
 
 	@Override
 	public Object setEL(PageContext pc, Collection.Key propertyName, Object value) {
-		Dispatch.put(dispatch, propertyName.getString(), unwrap(value));
+		try {
+			Dispatch.put(dispatch, propertyName.getString(), unwrap(value));
+		}
+		catch (ComException e) {
+			// setEL does not throw
+		}
 		return value;
 	}
 
@@ -86,7 +119,16 @@ public final class COMObject implements Objects, Iteratorable {
 		for (int i = 0; i < args.length; i++) {
 			arr[i] = unwrap(args[i]);
 		}
-		return COMUtil.toObject(this, Dispatch.callN(dispatch, methodName, arr), methodName);
+		try {
+			return COMUtil.toObject(this, Dispatch.callN(dispatch, methodName, arr), methodName);
+		}
+		catch (ComException e) {
+			throw toPageException("call the method", key, e);
+		}
+	}
+
+	private PageException toPageException(String action, Collection.Key key, ComException e) {
+		return eng.getExceptionUtil().createApplicationException("Failed to " + action + " [" + key.getString() + "] of the COM object [" + name + "]: " + e.getMessage());
 	}
 
 	@Override
@@ -106,19 +148,36 @@ public final class COMObject implements Objects, Iteratorable {
 	@Override
 	public DumpData toDumpData(PageContext pageContext, int maxlevel, DumpProperties dp) {
 		DumpTable table = new DumpTable("com", "#ff3300", "#ff9966", "#660000");
-		table.appendRow(1, simpleDumpData("COM Object"), simpleDumpData(name));
+		Constructor<?> constr = simpleDumpDataConstructor();
+		if (constr == null) {
+			// SimpleDumpData is not available, a table with the title is enough
+			table.setTitle("COM Object " + name);
+			return table;
+		}
+		try {
+			table.appendRow(1, (DumpData) constr.newInstance("COM Object"), (DumpData) constr.newInstance(name));
+		}
+		catch (Exception e) {
+			table.setTitle("COM Object " + name);
+		}
 		return table;
 	}
 
+	private static volatile Constructor<?> simpleDumpData;
+	private static volatile boolean simpleDumpDataLoaded;
+
 	// SimpleDumpData is a class of the Lucee core and not part of the loader API
-	private static DumpData simpleDumpData(String str) {
-		try {
-			Class<?> clazz = eng.getClassUtil().loadClass("lucee.runtime.dump.SimpleDumpData");
-			return (DumpData) clazz.getConstructor(String.class).newInstance(str);
+	private static Constructor<?> simpleDumpDataConstructor() {
+		if (!simpleDumpDataLoaded) {
+			try {
+				simpleDumpData = eng.getClassUtil().loadClass("lucee.runtime.dump.SimpleDumpData").getConstructor(String.class);
+			}
+			catch (Exception e) {
+				simpleDumpData = null;
+			}
+			simpleDumpDataLoaded = true;
 		}
-		catch (Exception e) {
-			throw eng.getExceptionUtil().createPageRuntimeException(eng.getCastUtil().toPageException(e));
-		}
+		return simpleDumpData;
 	}
 
 	@Override
@@ -204,6 +263,7 @@ public final class COMObject implements Objects, Iteratorable {
 		dispatch.safeRelease();
 	}
 
+	// not part of an interface of the loader API, so there is no @Override
 	public Iterator<Object> iterator() {
 		return valueIterator();
 	}
@@ -229,7 +289,7 @@ public final class COMObject implements Objects, Iteratorable {
 
 			@Override
 			public void remove() {
-				it.remove();
+				throw new UnsupportedOperationException();
 			}
 		};
 	}
@@ -257,7 +317,7 @@ public final class COMObject implements Objects, Iteratorable {
 
 			@Override
 			public void remove() {
-				it.remove();
+				throw new UnsupportedOperationException();
 			}
 		};
 	}

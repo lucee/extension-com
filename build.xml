@@ -25,23 +25,7 @@
         <mkdir dir="${dist}/"/>
     </target>
 
-    <!-- the official Jacob release (https://github.com/freemansoft/jacob-project) is not on Maven Central, it is installed into the local repository from source/java/lib -->
-    <target name="install-jacob" depends="init">
-        <!-- not in source/java, the pom of the extension needs the property revision -->
-        <exec dir="${temp}" executable="mvn" failonerror="true">
-            <arg value="-B"/>
-            <arg value="-q"/>
-            <arg value="install:install-file"/>
-            <arg value="-Dfile=${basedir}/source/java/lib/jacob-1.21.jar"/>
-            <arg value="-DpomFile=${basedir}/source/java/lib/jacob-1.21.pom"/>
-            <arg value="-DgroupId=com.jacob"/>
-            <arg value="-DartifactId=jacob"/>
-            <arg value="-Dversion=1.21"/>
-            <arg value="-Dpackaging=jar"/>
-        </exec>
-    </target>
-
-    <target name="maven-build" depends="init,install-jacob">
+    <target name="maven-build" depends="init">
 
         <!-- default to install if goal was not passed -->
         <condition property="maven.goal" value="install">
